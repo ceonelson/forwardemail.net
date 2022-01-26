@@ -460,6 +460,8 @@ async function resetPassword(ctx) {
   await user.setPassword(body.password);
   user = await user.save();
   await ctx.login(user);
+  await ctx.invalidateOtherSessions();
+
   const message = ctx.translate('RESET_PASSWORD');
   const redirectTo = ctx.state.l();
   if (ctx.accepts('html')) {
@@ -505,6 +507,7 @@ async function changeEmail(ctx) {
     user[config.userFields.changeEmailTokenExpiresAt] = null;
     user[config.userFields.changeEmailNewAddress] = null;
     await user.save();
+    await ctx.invalidateOtherSessions();
   } catch (err) {
     ctx.throw(err);
   }

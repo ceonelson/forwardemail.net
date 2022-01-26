@@ -37,7 +37,7 @@ test.beforeEach(async (t) => {
   // set password
   t.context.password = '!@K#NLK!#N';
   // create user
-  let user = await factory.build('user');
+  let user = await factory.build('user', {}, { sessions: 2 });
   // must register in order for authentication to work
   user = await Users.register(user, t.context.password);
   // setup user for otp
@@ -149,6 +149,7 @@ test('POST otp/setup > successful with token', async (t) => {
 
   const query = await Users.findOne({ email: user.email });
   t.is(query[config.passport.fields.otpEnabled], true);
+  t.is(query.sessions.length, 1);
 });
 
 test('POST otp/setup > invalid token', async (t) => {

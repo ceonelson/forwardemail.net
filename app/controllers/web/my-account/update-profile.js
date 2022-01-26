@@ -30,10 +30,12 @@ async function updateProfile(ctx) {
     if (body.password !== body.confirm_password)
       throw Boom.badRequest(ctx.translateError('INVALID_PASSWORD_CONFIRM'));
 
-    if (hasSetPassword)
+    if (hasSetPassword) {
       await ctx.state.user.changePassword(body.old_password, body.password);
-    else {
+      await ctx.invalidateOtherSessions();
+    } else {
       await ctx.state.user.setPassword(body.password);
+      await ctx.invalidateOtherSessions();
       ctx.state.user[config.userFields.hasSetPassword] = true;
     }
 

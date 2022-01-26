@@ -5,7 +5,10 @@ const cryptoRandomString = require('crypto-random-string');
 const { factory } = require('factory-girl');
 
 const utils = require('../utils');
+const config = require('#config');
 const phrases = require('#config/phrases');
+
+const Users = require('#models/user');
 
 test.before(utils.setupMongoose);
 test.before(utils.defineUserFactory);
@@ -117,22 +120,33 @@ test('allows password reset for valid email (JSON)', async (t) => {
 
 test('resets password with valid email and token (HTML)', async (t) => {
   const { web } = t.context;
-  const user = await factory.create('user', {}, { resetToken: 'token' });
+  let user = await factory.create(
+    'user',
+    {},
+    { resetToken: 'token', sessions: 2 }
+  );
   const { email } = user;
   const password = '!@K#NLK!#N';
 
   const res = await web
     .post(`/en/reset-password/token`)
     .set({ Accept: 'text/html' })
-    .send({ email, password });
+    .send({ email, password })
+    .redirects(1);
 
   t.is(res.status, 302);
-  t.is(res.header.location, '/en');
+  t.is(res.header.location, '/en/my-account/domains');
+
+  user = await Users.findById(user.id).lean().exec();
+  t.is(user[config.userFields.resetToken], null);
+  t.is(user[config.userFields.resetTokenExpiresAt], null);
+
+  t.is(user.sessions.length, 1);
 });
 
 test('resets password with valid email and token (JSON)', async (t) => {
   const { web } = t.context;
-  const user = await factory.create('user', {}, { resetToken: 'token' });
+  let user = await factory.create('user', {}, { resetToken: 'token' });
   const { email } = user;
   const password = '!@K#NLK!#N';
 
@@ -142,6 +156,10 @@ test('resets password with valid email and token (JSON)', async (t) => {
 
   t.is(res.status, 302);
   t.is(res.header.location, '/en');
+
+  user = await Users.findById(user.id).lean().exec();
+  t.is(user[config.userFields.resetToken], null);
+  t.is(user[config.userFields.resetTokenExpiresAt], null);
 });
 
 test('fails resetting password for non-existent user', async (t) => {
@@ -159,7 +177,11 @@ test('fails resetting password for non-existent user', async (t) => {
 
 test('fails resetting password with invalid reset token', async (t) => {
   const { web } = t.context;
-  const user = await factory.create('user', {}, { resetToken: 'token' });
+  let user = await factory.create(
+    'user',
+    {},
+    { resetToken: 'token', sessions: 2 }
+  );
   const { email } = user;
   const password = '!@K#NLK!#N';
 
@@ -169,22 +191,32 @@ test('fails resetting password with invalid reset token', async (t) => {
 
   t.is(res.status, 400);
   t.is(JSON.parse(res.text).message, phrases.INVALID_RESET_PASSWORD);
+
+  user = await Users.findById(user.id).lean().exec();
+  t.not(user[config.userFields.resetToken], null);
+  t.not(user[config.userFields.resetTokenExpiresAt], null);
+
+  t.is(user.sessions.length, 2);
 });
 
 test('fails resetting password with missing new password', async (t) => {
   const { web } = t.context;
-  const user = await factory.create('user', {}, { resetToken: 'token' });
+  let user = await factory.create('user', {}, { resetToken: 'token' });
   const { email } = user;
 
   const res = await web.post(`/en/reset-password/token`).send({ email });
 
   t.is(res.status, 400);
   t.is(JSON.parse(res.text).message, phrases.INVALID_PASSWORD);
+
+  user = await Users.findById(user.id).lean().exec();
+  t.not(user[config.userFields.resetToken], null);
+  t.not(user[config.userFields.resetTokenExpiresAt], null);
 });
 
 test('fails resetting password with invalid email', async (t) => {
   const { web } = t.context;
-  await factory.create('user', {}, { resetToken: 'token' });
+  let user = await factory.create('user', {}, { resetToken: 'token' });
 
   const res = await web
     .post(`/en/reset-password/token`)
@@ -192,11 +224,15 @@ test('fails resetting password with invalid email', async (t) => {
 
   t.is(res.status, 400);
   t.is(JSON.parse(res.text).message, phrases.INVALID_EMAIL);
+
+  user = await Users.findById(user.id).lean().exec();
+  t.not(user[config.userFields.resetToken], null);
+  t.not(user[config.userFields.resetTokenExpiresAt], null);
 });
 
 test('fails resetting password with invalid email + reset token match', async (t) => {
   const { web } = t.context;
-  await factory.create('user', {}, { resetToken: 'token' });
+  let user = await factory.create('user', {}, { resetToken: 'token' });
   const password = '!@K#NLK!#N';
 
   const res = await web
@@ -205,11 +241,15 @@ test('fails resetting password with invalid email + reset token match', async (t
 
   t.is(res.status, 400);
   t.is(JSON.parse(res.text).message, phrases.INVALID_RESET_PASSWORD);
+
+  user = await Users.findById(user.id).lean().exec();
+  t.not(user[config.userFields.resetToken], null);
+  t.not(user[config.userFields.resetTokenExpiresAt], null);
 });
 
 test('fails resetting password if new password is too weak', async (t) => {
   const { web } = t.context;
-  const user = await factory.create('user', {}, { resetToken: 'token' });
+  let user = await factory.create('user', {}, { resetToken: 'token' });
   const { email } = user;
 
   const res = await web
@@ -221,11 +261,15 @@ test('fails resetting password if new password is too weak', async (t) => {
     JSON.parse(res.text).message,
     new RegExp(phrases.INVALID_PASSWORD_STRENGTH)
   );
+
+  user = await Users.findById(user.id).lean().exec();
+  t.not(user[config.userFields.resetToken], null);
+  t.not(user[config.userFields.resetTokenExpiresAt], null);
 });
 
 test('fails resetting password if reset was already tried in the last 30 mins', async (t) => {
   const { web } = t.context;
-  const user = await factory.create('user');
+  let user = await factory.create('user');
   const { email } = user;
 
   await web.post('/en/forgot-password').send({ email });
@@ -237,4 +281,8 @@ test('fails resetting password if reset was already tried in the last 30 mins', 
     JSON.parse(res.text).message,
     util.format(phrases.PASSWORD_RESET_LIMIT, 'in 30 minutes')
   );
+
+  user = await Users.findById(user.id).lean().exec();
+  t.not(user[config.userFields.resetToken], null);
+  t.not(user[config.userFields.resetTokenExpiresAt], null);
 });

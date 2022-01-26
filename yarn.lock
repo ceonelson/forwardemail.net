@@ -1734,6 +1734,14 @@
     debug "^4.1.1"
     validator "^12.1.0"
 
+"@ladjs/store-sessions@https://github.com/ladjs/store-sessions":
+  version "0.0.1"
+  resolved "https://github.com/ladjs/store-sessions#c67114aa06b2860f57965cb2a7da7dbe7bc81345"
+  dependencies:
+    debug "^4.3.3"
+    is-string-and-not-blank "^0.0.2"
+    mongoose "^6.1.7"
+
 "@ladjs/web@^11.1.1":
   version "11.1.1"
   resolved "https://registry.yarnpkg.com/@ladjs/web/-/web-11.1.1.tgz#32966ce56455a385d2e756ecc36dd6dd80e9913f"
@@ -14250,6 +14258,22 @@ mongoose@^6.1.6:
   version "6.1.6"
   resolved "https://registry.yarnpkg.com/mongoose/-/mongoose-6.1.6.tgz#47903ef821b63fc5ef80a259c2331cabf994c957"
   integrity sha512-wvNRJ547x/Bn3EMhwbVInNsEp2OdlMxk4Q/vfgAkw8OI+giZQ72S90ZH0H6VzzIhs4lCU9SwXHYa2O0sPicnEQ==
+  dependencies:
+    "@types/node" "< 17.0.6"
+    bson "^4.2.2"
+    kareem "2.3.3"
+    mongodb "4.2.2"
+    mpath "0.8.4"
+    mquery "4.0.0"
+    ms "2.1.2"
+    regexp-clone "1.0.0"
+    sift "13.5.2"
+    sliced "1.0.1"
+
+mongoose@^6.1.7:
+  version "6.1.7"
+  resolved "https://registry.npmjs.org/mongoose/-/mongoose-6.1.7.tgz#fc1dfb792e0d2df52aa86064eb1a620d57b1926e"
+  integrity sha512-GqU/G/5yu/CWBHdW24cfGPsW4rADER+eeXj+bwvb6mLjg6uAASl8GnE6pmEbafZJ4Uv9V7jf5LaBMJMNwvQEtg==
   dependencies:
     "@types/node" "< 17.0.6"
     bson "^4.2.2"

@@ -16,6 +16,7 @@ const { boolean } = require('boolean');
 // <https://github.com/Automattic/mongoose/issues/5534>
 mongoose.Error.messages = require('@ladjs/mongoose-error-messages');
 
+const storeSessions = require('#helpers/store-sessions');
 const logger = require('#helpers/logger');
 const config = require('#config');
 const i18n = require('#helpers/i18n');
@@ -437,6 +438,10 @@ User.plugin(mongooseCommonPlugin, {
 });
 
 User.plugin(passportLocalMongoose, config.passportLocalMongoose);
+
+// must come after passport and common plugin
+// otherwise it will throw an `Id is not unique.` error
+User.plugin(storeSessions.plugin);
 
 User.post('init', (doc) => {
   for (const field of config.accountUpdateFields) {

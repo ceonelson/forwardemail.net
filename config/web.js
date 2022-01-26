@@ -11,6 +11,7 @@ const config = require('.');
 const i18n = require('#helpers/i18n');
 const passport = require('#helpers/passport');
 const logger = require('#helpers/logger');
+const storeSessions = require('#config/store-sessions');
 
 const defaultSrc = isSANB(process.env.WEB_HOST)
   ? [
@@ -134,5 +135,6 @@ module.exports = (client) => ({
     xssFilter: {
       reportUri
     }
-  }
+  },
+  storeSessions
 });

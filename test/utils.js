@@ -10,7 +10,7 @@ factory.setAdapter(new MongooseAdapter());
 
 // Models and server
 const config = require('#config');
-const { Users } = require('#models');
+const { Users, Sessions } = require('#models');
 
 let mongod;
 
@@ -63,7 +63,7 @@ exports.defineUserFactory = async () => {
   factory.define('user', Users, (buildOptions) => {
     const user = {
       email: factory.sequence('Users.email', (n) => `test${n}@example.com`),
-      password: buildOptions.password ? buildOptions.password : '!@K#NLK!#N'
+      password: buildOptions.password || '!@K#NLK!#N'
     };
 
     if (buildOptions.resetToken) {
@@ -73,6 +73,21 @@ exports.defineUserFactory = async () => {
       );
     }
 
+    user.sessions = buildOptions.sessions
+      ? factory.assocMany('Session', buildOptions.sessions, '_id')
+      : [];
+
     return user;
+  });
+
+  factory.define('Session', Sessions, {
+    ip: factory.chance('ip'),
+    sid: factory.chance('string', {
+      length: 32,
+      casing: 'lower',
+      alpha: true,
+      numeric: true
+    }),
+    last_activity: factory.chance('date')
   });
 };
