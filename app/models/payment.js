@@ -6,6 +6,7 @@ const humanize = require('humanize-string');
 const isSANB = require('is-string-and-not-blank');
 const mongoose = require('mongoose');
 const mongooseCommonPlugin = require('mongoose-common-plugin');
+const _ = require('lodash');
 const titleize = require('titleize');
 
 // <https://github.com/Automattic/mongoose/issues/5534>
@@ -41,6 +42,10 @@ const Payment = new mongoose.Schema({
   // for automatic subscription payments
   invoice_at: Date,
   amount_formatted: {
+    type: String,
+    required: true
+  },
+  amount_refunded_formatted: {
     type: String,
     required: true
   },
@@ -95,7 +100,8 @@ const Payment = new mongoose.Schema({
   stripe_payment_intent_id: String,
   paypal_order_id: String,
   [config.userFields.paypalSubscriptionID]: String,
-  paypal_transaction_id: String
+  paypal_transaction_id: String,
+  refunded_at: Date
 });
 
 Payment.virtual('description').get(function () {
@@ -127,11 +133,18 @@ Payment.pre('validate', async function (next) {
   try {
     this.amount_formatted = accounting.formatMoney(this.amount / 100);
 
+    this.amount_refunded_formatted = accounting.formatMoney(
+      this.amount_refunded / 100
+    );
+
     if (!isSANB(this.reference))
       this.reference = await cryptoRandomString.async(config.referenceOptions);
 
     // get unique reference recursively
     this.reference = await getUniqueReference(this);
+
+    if (_.isFinite(this.amount_refunded) && !_.isDate(this.refunded_at))
+      this.refunded_at = new Date();
 
     next();
   } catch (err) {

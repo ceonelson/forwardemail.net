@@ -106,14 +106,42 @@ async function createDomainBilling(ctx) {
       // if the user didn't have JavaScript enabled, then redirect them to Stripe page
       if (ctx.accepts('html')) throw ctx.translateError('JAVASCRIPT_REQUIRED');
 
+      // create/validate stripe customer here - this ensures we have the valid customer saved before all future stripe interaction.
+      // it is currently needed to be created here to properly process the first webhook
+      try {
+        const customer = await stripe.customers.retrieve(
+          ctx.state.user[config.userFields.stripeCustomerID]
+        );
+        if (customer.deleted)
+          throw new Error('Stripe customer previously deleted');
+      } catch (err) {
+        ctx.logger.warn(err);
+        ctx.logger.info('creating new stripe customer', {
+          user: ctx.state.user.toObject()
+        });
+        try {
+          const customer = await stripe.customers.create({
+            email: ctx.state.user.email
+          });
+          ctx.state.user[config.userFields.stripeCustomerID] = customer.id;
+          await ctx.state.user.save();
+        } catch (_err) {
+          // handle any stripe customer creation errors as we need
+          // to stop all flow here if we cannot create the customer
+          ctx.logger.fatal(_err);
+          throw ctx.translate('UNKNOWN_ERROR');
+        }
+      }
+
       const options = {
         // TODO: add alipay and others
         payment_method_types: ['card'],
         mode: paymentType === 'one-time' ? 'payment' : 'subscription',
-        ...(isSANB(ctx.state.user[config.userFields.stripeCustomerID])
-          ? { customer: ctx.state.user[config.userFields.stripeCustomerID] }
-          : { customer_email: ctx.state.user.email }),
+        customer: ctx.state.user[config.userFields.stripeCustomerID],
         client_reference_id: reference,
+        metadata: {
+          plan
+        },
         line_items: [
           {
             price,

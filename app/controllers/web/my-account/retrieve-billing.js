@@ -14,6 +14,10 @@ async function retrieveBilling(ctx, next) {
     return payment;
   });
 
+  ctx.state.planExpiresAt = await ctx.state.user.getPlanExpiresAt(
+    ctx.state.payments
+  );
+
   return next();
 }
 

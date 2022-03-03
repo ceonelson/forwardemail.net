@@ -1,5 +1,4 @@
 const process = require('process');
-
 const checkoutNodeJssdk = require('@paypal/checkout-server-sdk');
 const env = require('./env');
 
@@ -102,6 +101,16 @@ const STRIPE_PRODUCTS = {
   prod_IBizMRHKSjMQcl: 'enhanced_protection'
 };
 
+const STRIPE_PRODUCTS_BY_PLAN = isTest
+  ? {
+      team: 'prod_ICSwLEvQhmYDcy',
+      enhanced_protection: 'prod_ICStJG6fjZhEjl'
+    }
+  : {
+      team: 'prod_ICRsgPRv2sVKlp',
+      enhanced_protection: 'prod_IBizMRHKSjMQcl'
+    };
+
 const PAYMENT_DURATIONS = new Set([
   '30d',
   '60d',
@@ -170,6 +179,7 @@ const paypalCheckoutSdkConfig = new checkoutNodeJssdk.core[
 module.exports = {
   STRIPE_MAPPING,
   STRIPE_PRODUCTS,
+  STRIPE_PRODUCTS_BY_PLAN,
   PAYMENT_DURATIONS,
   PAYPAL_MAPPING,
   PAYPAL_PLAN_MAPPING,

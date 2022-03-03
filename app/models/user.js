@@ -16,6 +16,7 @@ const { boolean } = require('boolean');
 // <https://github.com/Automattic/mongoose/issues/5534>
 mongoose.Error.messages = require('@ladjs/mongoose-error-messages');
 
+const Payments = require('./payment');
 const logger = require('#helpers/logger');
 const config = require('#config');
 const i18n = require('#helpers/i18n');
@@ -423,6 +424,44 @@ User.methods.sendVerificationEmail = async function (ctx, reset = false) {
   await this.save();
 
   return this;
+};
+
+User.methods.getPlanExpiresAt = async function (payments) {
+  const user = this;
+  const now = dayjs().locale(user[config.lastLocaleField]);
+
+  if (!Array.isArray(payments))
+    payments = await Payments.find({ user: user._id })
+      .select('created_at duration')
+      .lean()
+      .exec();
+
+  const currentPayments = payments.filter(
+    (payment) =>
+      !_.isDate(payment.refunded_at) &&
+      _.isDate(payment.created_at) &&
+      _.isFinite(payment.duration) &&
+      dayjs(payment.created_at).add(payment.duration, 'ms').isAfter(now)
+  );
+
+  if (currentPayments.length > 0) {
+    // calc the time they have accumulated
+    let accumulatedTime = 0;
+    for (const payment of currentPayments) {
+      const paymentEndDate = dayjs(payment.created_at).add(
+        payment.duration,
+        'ms'
+      );
+
+      accumulatedTime += dayjs
+        .duration(paymentEndDate.diff(now))
+        .asMilliseconds();
+    }
+
+    return now.add(accumulatedTime, 'ms').toDate();
+  }
+
+  return null;
 };
 
 User.plugin(mongooseCommonPlugin, {

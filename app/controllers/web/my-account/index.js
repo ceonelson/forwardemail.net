@@ -39,6 +39,7 @@ const updateMember = require('./update-member');
 const updateProfile = require('./update-profile');
 const validateAlias = require('./validate-alias');
 const verifyRecords = require('./verify-records');
+const upgradeSubscription = require('./upgrade-subscription');
 
 module.exports = {
   cancelEmailChange,
@@ -81,5 +82,6 @@ module.exports = {
   updateMember,
   updateProfile,
   validateAlias,
-  verifyRecords
+  verifyRecords,
+  upgradeSubscription
 };

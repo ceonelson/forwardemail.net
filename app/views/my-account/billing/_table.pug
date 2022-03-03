@@ -66,7 +66,7 @@ mixin receipt(payment)
               +receipt(payment)
           td.align-middle.d-none.d-lg-table-cell
             +paymentMethod(payment)
-          td.align-middle.text-right= payment.amount_formatted
+          td.align-middle.text-right= `${payment.amount_formatted}${payment.amount_refunded > 0 ? `(-${payment.amount_refunded_formatted})` : ""}`
           td.align-middle.d-none.d-lg-table-cell.text-center
             +receipt(payment)
 +paginate('#table-payments')

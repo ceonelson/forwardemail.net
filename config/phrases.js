@@ -209,7 +209,8 @@ module.exports = {
   INVALID_PAYPAL_SIGNATURE: 'Invalid PayPal Signature',
   SUBSCRIPTION_ALREADY_CANCELLED:
     'You do not currently have an active subscription, or it was recently cancelled.',
-  SUBSCRIPTION_CANCELLED: 'You have successfully cancelled your subscription.',
+  SUBSCRIPTION_CANCELLED:
+    'You have successfully cancelled your subscription and have been issued a pro-rated refund.',
   ONE_TIME_PAYMENT_SUCCESSFUL: 'You have successfully made a one-time payment.',
   REFUND_PROCESSING:
     'We will manually process your pro-rated refund in the amount of <span class="notranslate">%s USD</span> and email you when complete.',

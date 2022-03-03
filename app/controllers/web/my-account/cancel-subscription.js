@@ -1,19 +1,11 @@
-const { promisify } = require('util');
-
 const Boom = require('@hapi/boom');
 const Stripe = require('stripe');
 const isSANB = require('is-string-and-not-blank');
-const ms = require('ms');
-const paypal = require('paypal-rest-sdk');
-const superagent = require('superagent');
 
 const env = require('#config/env');
 const config = require('#config');
 
-const PAYPAL_ENDPOINT =
-  env.NODE_ENV === 'production'
-    ? 'https://api-m.paypal.com'
-    : 'https://api-m.sandbox.paypal.com';
+const { paypalAgent } = require('#helpers/paypal');
 
 const stripe = new Stripe(env.STRIPE_SECRET_KEY);
 
@@ -31,23 +23,18 @@ async function cancelSubscription(ctx, next) {
         )
       : Promise.resolve(),
     isSANB(ctx.state.user[config.userFields.paypalSubscriptionID])
-      ? (async () => {
-          const token = await promisify(paypal.generateToken)();
-          await superagent
-            .post(
-              `${PAYPAL_ENDPOINT}/v1/billing/subscriptions/${
-                ctx.state.user[config.userFields.paypalSubscriptionID]
-              }/cancel`
-            )
-            .set('Content-Type', 'application/json')
-            .set('Authorization', token)
-            .timeout(ms('5s'));
-        })()
+      ? paypalAgent.post(
+          `/v1/billing/subscriptions/${
+            ctx.state.user[config.userFields.paypalSubscriptionID]
+          }/cancel`
+        )
       : Promise.resolve()
   ]);
 
   ctx.state.user[config.userFields.stripeSubscriptionID] = null;
   ctx.state.user[config.userFields.paypalSubscriptionID] = null;
+
+  ctx.state.user.plan = 'free';
 
   await ctx.state.user.save();
 

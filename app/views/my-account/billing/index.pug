@@ -67,7 +67,7 @@ block body
               if user.plan === 'free'
                 i.fa.fa-infinity
               else
-                - let str = _.capitalize(dayjs(user[config.userFields.planExpiresAt]).locale(ctx.locale).fromNow());
+                - let str = _.capitalize(dayjs(planExpiresAt).locale(ctx.locale).fromNow());
                 if str.startsWith('A ')
                   - str = str.replace("A ", "1 ");
                 else if str.startsWith('In a')

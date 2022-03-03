@@ -5,6 +5,10 @@ const paginate = require('koa-ctx-paginate');
 const policies = require('#helpers/policies');
 const web = require('#controllers/web');
 
+const auth = require('#controllers/web/my-account/create-invite');
+
+console.log(auth);
+
 const router = new Router({ prefix: '/my-account' });
 
 router.use(policies.ensureLoggedIn);
@@ -32,6 +36,7 @@ router.delete(
 router.post('/billing/manage-payments', web.myAccount.manageBilling);
 router.get('/billing/make-payment', web.myAccount.retrieveDomainBilling);
 router.post('/billing/make-payment', web.myAccount.createDomainBilling);
+router.get('/billing/upgrade/subscription', web.myAccount.upgradeSubscription);
 router.get('/billing/upgrade', web.myAccount.retrieveDomainBilling);
 router.post('/billing/upgrade', web.myAccount.createDomainBilling);
 router.get('/billing/:reference', web.myAccount.retrieveReceipt);
