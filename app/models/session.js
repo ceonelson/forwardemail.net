@@ -16,7 +16,11 @@ const Session = new mongoose.Schema({
   last_activity: Date
 });
 
-Session.plugin(mongooseCommonPlugin, { object: 'session' });
+Session.plugin(mongooseCommonPlugin, {
+  object: 'session',
+  omitCommonFields: false,
+  omitExtraFields: ['_id', '__v'],
+  uniqueId: false
+});
 
-module.exports = mongoose.model('Session', Session);
 module.exports.SessionSchema = Session;

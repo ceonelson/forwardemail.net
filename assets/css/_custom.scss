@@ -50,3 +50,13 @@ mark {
     transition-duration: 0s !important;
   }
 }
+
+// allow hoverable lists
+.list-hover {
+  li {
+    @include hover() {
+      color: $table-hover-color;
+      background-color: $table-hover-bg;
+    }
+  }
+}

@@ -1,3 +1,5 @@
+const util = require('util');
+
 const Router = require('@koa/router');
 const render = require('koa-views-render');
 const paginate = require('koa-ctx-paginate');
@@ -207,7 +209,25 @@ router.put('/profile', web.myAccount.updateProfile);
 router.put('/profile/resend-email-change', web.myAccount.resendEmailChange);
 router.put('/profile/cancel-email-change', web.myAccount.cancelEmailChange);
 router.delete('/security', web.myAccount.resetAPIToken);
-router.get('/security', render('my-account/security'));
+router.get(
+  '/security',
+  (ctx, next) => {
+    const toCheck = ctx.req;
+    let props = [];
+    let obj = toCheck;
+    do {
+      props.push(...Object.getOwnPropertyNames(obj));
+    } while ((obj = Object.getPrototypeOf(obj)));
+
+    props = props.sort().filter((e, i, arr) => {
+      if (e !== arr[i + 1] && typeof toCheck[e] === 'function') return true;
+    });
+    console.log(props);
+    console.log(util.inspect(toCheck, true, null, true));
+    return next();
+  },
+  render('my-account/security')
+);
 router.post('/recovery-keys', web.myAccount.recoveryKeys);
 
 module.exports = router;
